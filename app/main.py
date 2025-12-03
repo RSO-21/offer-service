@@ -2,13 +2,17 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from .db import engine, Base, get_db
+from prometheus_fastapi_instrumentator import Instrumentator
+
+from .db import get_db, Base, engine
 from .api.offers import router as offers_router
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Offer Service")
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/health")
