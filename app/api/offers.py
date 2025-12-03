@@ -32,3 +32,27 @@ def get_offer(offer_id: int, db: Session = Depends(get_db)):
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
     return offer
+
+@router.put("/{offer_id}", response_model=schemas.OfferRead)
+def update_offer(offer_id: int, offer_update: schemas.OfferUpdate, db: Session = Depends(get_db)):
+    offer = db.query(models.Offer).filter(models.Offer.id == offer_id).first()
+    if not offer:
+        raise HTTPException(status_code=404, detail="Offer not found")
+
+    update_data = offer_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(offer, key, value)
+
+    db.commit()
+    db.refresh(offer)
+    return offer
+
+@router.delete("/{offer_id}", status_code=204)
+def delete_offer(offer_id: int, db: Session = Depends(get_db)):
+    offer = db.query(models.Offer).filter(models.Offer.id == offer_id).first()
+    if not offer:
+        raise HTTPException(status_code=404, detail="Offer not found")
+
+    db.delete(offer)
+    db.commit()
+    return None
