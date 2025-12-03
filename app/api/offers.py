@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+import grpc
+from ..grpc_generated import partner_pb2, partner_pb2_grpc
+
 from ..db import get_db
 from .. import models, schemas
+
+from ..config import settings
 
 router = APIRouter(
     prefix="/offers",
@@ -17,8 +22,12 @@ def list_offers(db: Session = Depends(get_db)):
 
 @router.post("/", response_model=schemas.OfferRead, status_code=201)
 def create_offer(offer: schemas.OfferCreate, db: Session = Depends(get_db)):
-    # Optionally: Validate partner ID by calling Partner Service (in next step)
-    
+    # 1) preveri partnerja preko gRPC
+    partner = get_partner_via_grpc(offer.partner_id)
+    if partner is None or partner.active is False:
+        raise HTTPException(status_code=400, detail="Invalid or inactive partner")
+
+    # 2) shrani offer v DB
     db_offer = models.Offer(**offer.dict())
     db.add(db_offer)
     db.commit()
@@ -56,3 +65,16 @@ def delete_offer(offer_id: int, db: Session = Depends(get_db)):
     db.delete(offer)
     db.commit()
     return None
+
+def get_partner_via_grpc(partner_id: int):
+    target = f"{settings.partner_grpc_host}:{settings.partner_grpc_port}"
+    with grpc.insecure_channel(target) as channel:
+        stub = partner_pb2_grpc.PartnerServiceStub(channel)
+        request = partner_pb2.GetPartnerRequest(id=partner_id)
+        try:
+            response = stub.GetPartner(request)
+            return response
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.NOT_FOUND:
+                return None
+            raise

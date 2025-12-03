@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     pg_port: int = Field(5432, validation_alias="PGPORT")
     pg_database: str = Field(validation_alias="PGDATABASE")
 
+    partner_grpc_host: str = Field(validation_alias="PARTNER_GRPC_HOST")
+    partner_grpc_port: int = Field(50051, validation_alias="PARTNER_GRPC_PORT")
+
     # .env podpora (opcijsko, ampak zelo uporabno)
     model_config = SettingsConfigDict(
         env_file=".env",
