@@ -47,12 +47,13 @@ PGHOST=your_postgres_host
 PGUSER=your_postgres_user
 PGPASSWORD=your_postgres_password
 PGPORT=5432
-PGDATABASE=rso
+PGDATABASE=offer_service
 
 # gRPC connection to Partner Service
 PARTNER_GRPC_HOST=partner-service
 PARTNER_GRPC_PORT=50051
 ```
+> Create the database once on your Postgres server, e.g. `CREATE DATABASE offer_service;`, and grant the `PGUSER` account rights to it. Repeat the pattern for other microservices so each one owns its own database.
 ---
 
 ## ▶️ Running Locally (without Docker)
