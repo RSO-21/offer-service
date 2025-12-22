@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
+from typing import Optional
 
 import grpc
 from ..grpc_generated import partner_pb2, partner_pb2_grpc
 
-from ..db import get_db
+from ..db import get_db, get_db_session
 from .. import models, schemas
 
 from ..config import settings
@@ -14,16 +15,24 @@ router = APIRouter(
     tags=["offers"],
 )
 
+def get_tenant_id(x_tenant_id: Optional[str] = Header(None)) -> str:
+    """Extract tenant ID from header, default to public"""
+    return x_tenant_id or "public"
+
+def get_db_with_schema(tenant_id: str = Depends(get_tenant_id)):
+    """Dependency to inject DB session with dynamic schema from X-Tenant-ID header"""
+    return get_db_session(schema=tenant_id)
+
 
 @router.get("/", response_model=list[schemas.OfferRead])
-def list_offers(db: Session = Depends(get_db)):
+def list_offers(db: Session = Depends(get_db_with_schema)):
     return db.query(models.Offer).all()
 
 
 @router.post("/", response_model=schemas.OfferRead, status_code=201)
-def create_offer(offer: schemas.OfferCreate, db: Session = Depends(get_db)):
+def create_offer(offer: schemas.OfferCreate, db: Session = Depends(get_db_with_schema), tenant_id: str = Depends(get_tenant_id)):
     # 1) preveri partnerja preko gRPC
-    partner = get_partner_via_grpc(offer.partner_id)
+    partner = get_partner_via_grpc(offer.partner_id, tenant_id)
     if partner is None or partner.active is False:
         raise HTTPException(status_code=400, detail="Invalid or inactive partner")
 
@@ -36,14 +45,14 @@ def create_offer(offer: schemas.OfferCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{offer_id}", response_model=schemas.OfferRead)
-def get_offer(offer_id: int, db: Session = Depends(get_db)):
+def get_offer(offer_id: int, db: Session = Depends(get_db_with_schema)):
     offer = db.query(models.Offer).filter(models.Offer.id == offer_id).first()
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
     return offer
 
 @router.put("/{offer_id}", response_model=schemas.OfferRead)
-def update_offer(offer_id: int, offer_update: schemas.OfferUpdate, db: Session = Depends(get_db)):
+def update_offer(offer_id: int, offer_update: schemas.OfferUpdate, db: Session = Depends(get_db_with_schema)):
     offer = db.query(models.Offer).filter(models.Offer.id == offer_id).first()
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
@@ -57,7 +66,7 @@ def update_offer(offer_id: int, offer_update: schemas.OfferUpdate, db: Session =
     return offer
 
 @router.delete("/{offer_id}", status_code=204)
-def delete_offer(offer_id: int, db: Session = Depends(get_db)):
+def delete_offer(offer_id: int, db: Session = Depends(get_db_with_schema)):
     offer = db.query(models.Offer).filter(models.Offer.id == offer_id).first()
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
@@ -66,13 +75,14 @@ def delete_offer(offer_id: int, db: Session = Depends(get_db)):
     db.commit()
     return None
 
-def get_partner_via_grpc(partner_id: int):
+def get_partner_via_grpc(partner_id: int, tenant_id: Optional[str] = None):
     target = f"{settings.partner_grpc_host}:{settings.partner_grpc_port}"
+    metadata = [("x-tenant-id", (tenant_id or "public"))]
     with grpc.insecure_channel(target) as channel:
         stub = partner_pb2_grpc.PartnerServiceStub(channel)
         request = partner_pb2.GetPartnerRequest(id=partner_id)
         try:
-            response = stub.GetPartner(request)
+            response = stub.GetPartner(request, metadata=metadata)
             return response
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.NOT_FOUND:

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from .config import settings
 
@@ -23,3 +23,10 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def get_db_session(schema: str = None):
+    session = SessionLocal()
+    if schema:
+        # Set search_path for this session
+        session.execute(text(f"SET search_path TO {schema}"))
+    return session
