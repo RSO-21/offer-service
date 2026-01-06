@@ -6,7 +6,7 @@ class Offer(Base):
     __tablename__ = "offers"
 
     id = Column(Integer, primary_key=True, index=True)
-    partner_id = Column(Integer, nullable=False)  # brez FK
+    partner_id = Column(String(36), primary_key=True, index=True)
 
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
