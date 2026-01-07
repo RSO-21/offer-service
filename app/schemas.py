@@ -4,7 +4,7 @@ from typing import Optional
 
 
 class OfferBase(BaseModel):
-    partner_id: int
+    partner_id: str
     title: str
     description: Optional[str] = None
     price_original: float

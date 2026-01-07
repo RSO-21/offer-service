@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from .config import settings
+from contextlib import contextmanager
 
 DATABASE_URL = (
     f"postgresql://{settings.pg_user}:{settings.pg_password}"
@@ -24,6 +25,7 @@ def get_db():
     finally:
         db.close()
 
+@contextmanager
 def get_db_session(schema: str = None):
     session = SessionLocal()
     try:
