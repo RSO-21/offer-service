@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rpartner.proto\x12\x07partner\"\x1f\n\x11GetPartnerRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"Q\n\x12GetPartnerResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x03 \x01(\x08\x12\x11\n\ttenant_id\x18\x04 \x01(\t2W\n\x0ePartnerService\x12\x45\n\nGetPartner\x12\x1a.partner.GetPartnerRequest\x1a\x1b.partner.GetPartnerResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rpartner.proto\x12\x07partner\"\x1f\n\x11GetPartnerRequest\x12\n\n\x02id\x18\x01 \x01(\t\"Q\n\x12GetPartnerResponse\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x03 \x01(\x08\x12\x11\n\ttenant_id\x18\x04 \x01(\t2W\n\x0ePartnerService\x12\x45\n\nGetPartner\x12\x1a.partner.GetPartnerRequest\x1a\x1b.partner.GetPartnerResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)

@@ -4,12 +4,12 @@ package partner;
 
 // Request
 message GetPartnerRequest {
-  int32 id = 1;
+  string id = 1;
 }
 
 // Response
 message GetPartnerResponse {
-  int32 id = 1;
+  string id = 1;
   string name = 2;
   bool active = 3;
   string tenant_id = 4;

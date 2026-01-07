@@ -1,11 +1,11 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, text
 from .db import Base
 
 
 class Offer(Base):
     __tablename__ = "offers"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, server_default=text("nextval('offers_id_seq')"))
     partner_id = Column(String(36), primary_key=True, index=True)
 
     title = Column(String, nullable=False)
