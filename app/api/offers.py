@@ -30,7 +30,7 @@ def list_offers(db: Session = Depends(get_db_with_schema)):
 
 
 @router.post("/", response_model=schemas.OfferRead, status_code=201)
-def create_offer(offer: schemas.OfferCreate, db: Session = Depends(get_db_with_schema), tenant_id: str = Depends(get_tenant_id)):
+def create_offer(offer: schemas.OfferBase, db: Session = Depends(get_db_with_schema), tenant_id: str = Depends(get_tenant_id)):
     # 1) preveri partnerja preko gRPC
     partner = get_partner_via_grpc(offer.partner_id, tenant_id)
     if partner is None or partner.active is False:
@@ -74,6 +74,42 @@ def delete_offer(offer_id: int, db: Session = Depends(get_db_with_schema)):
     db.delete(offer)
     db.commit()
     return None
+
+@router.get(
+    "/by-partner/{partner_id}",
+    response_model=list[schemas.OfferRead]
+)
+def list_offers_by_partner(
+    partner_id: str,
+    db: Session = Depends(get_db_with_schema),
+):
+    offers = (
+        db.query(models.Offer)
+        .filter(models.Offer.partner_id == partner_id)
+        .all()
+    )
+
+    return offers
+
+@router.post(
+    "/bulk",
+    response_model=list[schemas.OfferRead]
+)
+def get_offers_bulk(
+    payload: schemas.OfferBulkRequest,
+    db: Session = Depends(get_db_with_schema),
+):
+    if not payload.ids:
+        return []
+
+    offers = (
+        db.query(models.Offer)
+        .filter(models.Offer.id.in_(payload.ids))
+        .all()
+    )
+
+    return offers
+
 
 def get_partner_via_grpc(partner_id: int, tenant_id: Optional[str] = None):
     target = f"{settings.partner_grpc_host}:{settings.partner_grpc_port}"
