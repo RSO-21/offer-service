@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, text
+from sqlalchemy import Column, Integer, String, Boolean, Float, Date, text
 from .db import Base
 
 
@@ -14,11 +14,7 @@ class Offer(Base):
     price_original = Column(Float, nullable=False)
     price_discounted = Column(Float, nullable=False)
 
-    quantity_total = Column(Integer, nullable=False)
-    quantity_available = Column(Integer, nullable=False)
-
-    pickup_from = Column(DateTime, nullable=False)
-    pickup_until = Column(DateTime, nullable=False)
+    expiry_date = Column(Date, nullable=False)
 
     status = Column(String, default="ACTIVE")
     tenant_id = Column(String, nullable=True)

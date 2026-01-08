@@ -6,10 +6,21 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from .db import get_db, Base, engine
 from .api.offers import router as offers_router
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Offer Service")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:4200",  # Angular dev
+        "http://localhost:5173",  # Vite (if used)
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],        # ← IMPORTANT
+    allow_headers=["*"],        # ← IMPORTANT (X-Tenant-ID!)
+)
 
 
 Instrumentator().instrument(app).expose(app)
