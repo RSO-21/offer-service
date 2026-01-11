@@ -10,10 +10,7 @@ from .. import models, schemas
 
 from ..config import settings
 
-router = APIRouter(
-    prefix="/offers",
-    tags=["offers"],
-)
+router = APIRouter()
 
 def get_tenant_id(x_tenant_id: Optional[str] = Header(None)) -> str:
     """Extract tenant ID from header, default to public"""
@@ -24,7 +21,7 @@ def get_db_with_schema(tenant_id: str = Depends(get_tenant_id)):
         yield db
 
 
-@router.get("/", response_model=list[schemas.OfferRead])
+@router.get("/list_offers", response_model=list[schemas.OfferRead])
 def list_offers(db: Session = Depends(get_db_with_schema)):
     return db.query(models.Offer).all()
 
